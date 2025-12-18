@@ -5,14 +5,14 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "beautifhy"
-description = "A Hy pretty-printer / code formatter / beautifier."
+name = "hy-repl"
+description = "A fancy Hy REPL."
 authors = [
-    {name = "Ati Sharma", email = "ati+beautifhy@agalmic.ltd"},
+    {name = "Ati Sharma", email = "ati+hy-repl@agalmic.ltd"},
 ]
 dynamic = ["version", "readme"]
 requires-python = ">=3.13"
-keywords = ["hy", "hylang", "utilities", "automation", "formatter"]
+keywords = ["hy", "hylang", "utilities", "repl"]
 license = {file = "LICENSE"}
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -24,35 +24,30 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
-    "Topic :: Software Development :: Quality Assurance",
     "Topic :: Software Development :: Libraries",
     "Topic :: Utilities"
 ]
 dependencies = [
-    "hy>=1.0.0",
-    "hyrule>=1.0.0",
-    "multimethod>=2.0",
-    "pygments",
-    "prompt_toolkit",
-    "toolz"
+    "hy>=1.1.0",
+    "hyrule>=1.0.1",
+    "beautifhy>=1.2.1",
+    "prompt_toolkit>=3.0.52"
 ]
 
 [project.optional-dependencies]
 
 [project.urls]
-Repository = "https://github.com/atisharma/beautifhy"
+Repository = "https://github.com/atisharma/hy-repl"
 
 [tool.setuptools.dynamic]
 readme = {file = "README.md", content-type = "text/markdown"}
-version = {attr = "beautifhy.__version__"}
+version = {attr = "hy_repl.__version__"}
 
 [tool.setuptools.package-data]
 "*" = ["*.hy"]
 
 [project.scripts]
-beautifhy = "beautifhy:__cli_grind_files"
-hylight = "beautifhy:__cli_hylight_files"
-hy-repl = "beautifhy:__cli_repl"
+hy-repl = "hy_repl:__cli_repl"
 
 # ... other project metadata fields as listed in:
 #     https://packaging.python.org/en/latest/guides/writing-pyproject-toml/

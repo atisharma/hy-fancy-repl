@@ -33,7 +33,7 @@ The REPL's behavior can be configured with the following environment variables:
 
 .. code-block:: python
 
-    from beautifhy.repl import HyREPL
+    from hy_repl.repl import HyREPL
 
     # Create and start the REPL
     repl = HyREPL()
@@ -227,6 +227,7 @@ class HyREPL(hy.repl.REPL):
       highlighting. Defaults to ``friendly``.
     - ``HY_LIVE_COMPLETION``: If set, enables live/interactive autocompletion
       in a dropdown menu as you type.
+    - `HY_VI_MODE`: If set, enable vi line-editing mode (rather than the default emacs mode).
     """
 
     def __init__(self, locals=None, filename="<stdin>", status=None):
