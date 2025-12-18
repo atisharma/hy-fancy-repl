@@ -41,14 +41,14 @@ Repository = "https://github.com/atisharma/hy-fancy-repl"
 
 [tool.setuptools.dynamic]
 readme = {file = "README.md", content-type = "text/markdown"}
-version = {attr = "hy_repl.__version__"}
+version = {attr = "hy_fancy_repl.__version__"}
 
 [tool.setuptools.package-data]
 "*" = ["*.hy"]
 
 [project.scripts]
-hy-repl = "hy_repl:__cli_repl"
-hy-fancy-repl = "hy_repl:__cli_repl"
+hy-repl = "hy_fancy_repl:__cli_repl"
+hy-fancy-repl = "hy_fancy_repl:__cli_repl"
 
 # ... other project metadata fields as listed in:
 #     https://packaging.python.org/en/latest/guides/writing-pyproject-toml/

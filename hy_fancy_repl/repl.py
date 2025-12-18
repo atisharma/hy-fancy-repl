@@ -33,7 +33,7 @@ The REPL's behavior can be configured with the following environment variables:
 
 .. code-block:: python
 
-    from hy_repl.repl import HyREPL
+    from hy_fancy_repl.repl import HyREPL
 
     # Create and start the REPL
     repl = HyREPL()
@@ -41,7 +41,7 @@ The REPL's behavior can be configured with the following environment variables:
 
 """
 
-import asyncio, builtins, io, os, re, sys, time
+import asyncio, builtins, io, os, platform, re, sys, time
 import shutil
 import traceback
 
@@ -395,3 +395,13 @@ class HyREPL(hy.repl.REPL):
                     await plot_task
                 except asyncio.CancelledError:
                     pass
+
+    def banner(self):
+        return "🦑 Hy {version}{nickname} using {py}({build}) {pyversion} on {os}".format(
+            version=hy.__version__,
+            nickname="" if hy.nickname is None else f' ({hy.nickname})',
+            py=platform.python_implementation(),
+            build=platform.python_build()[0],
+            pyversion=platform.python_version(),
+            os=platform.system(),
+        )
