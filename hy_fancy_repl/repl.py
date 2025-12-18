@@ -1,5 +1,5 @@
 """
-An enhanced REPL for Hy.
+A fancy REPL for Hy.
 
 This module provides a feature-rich interactive console for Hy by
 extending ``hy.repl.REPL`` with ``prompt_toolkit`` and ``pygments``.

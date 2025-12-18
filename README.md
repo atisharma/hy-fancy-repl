@@ -1,4 +1,4 @@
-## 🦑 hy-repl
+## 🦑 hy-fancy-repl
 
 *A [Hy](https://hylang.org) enhanced REPL.*
 
@@ -8,7 +8,7 @@ Probably compatible with Hy 1.1.0 and later.
 ### Install
 
 ```bash
-$ pip install -U hy-repl
+$ pip install -U hy-fancy-repl
 ```
 
 
@@ -20,6 +20,13 @@ syntax highlighting, and interactive matplotlib plots.
 ```bash
 $ hy-repl
 ```
+
+or
+
+```bash
+$ hy-fancy-repl
+```
+
 
 The behaviour of the repl may be modified with the following environment
 variables.
@@ -33,11 +40,11 @@ variables.
 ### Acknowledgements
 
 The REPL uses [pygments](https://pygments.org/) and [prompt-toolkit](https://python-prompt-toolkit.readthedocs.io/).
-Plus, of course, [Hy](https://hylang.org), whose REPL `hy-repl` extends.
+Plus, of course, [Hy](https://hylang.org), whose REPL `hy-fancy-repl` extends.
 
 
 ### Docs
 
 Try clicking below.
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/atisharma/hy-repl)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/atisharma/hy-fancy-repl)

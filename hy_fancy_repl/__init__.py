@@ -1,8 +1,8 @@
 """
-🦑 - hy-repl, an enhanced Hy REPL.
+🦑 - hy-fancy-repl, an enhanced Hy REPL.
 """
 
-from hy_repl.repl import HyREPL
+from hy_fancy_repl.repl import HyREPL
 
 # set the package version
 # the major.minor version simply match the assumed Hy version

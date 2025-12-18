@@ -5,10 +5,10 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hy-repl"
+name = "hy-fancy-repl"
 description = "A fancy Hy REPL."
 authors = [
-    {name = "Ati Sharma", email = "ati+hy-repl@agalmic.ltd"},
+    {name = "Ati Sharma", email = "ati+hy-fancy-repl@agalmic.ltd"},
 ]
 dynamic = ["version", "readme"]
 requires-python = ">=3.13"
@@ -37,7 +37,7 @@ dependencies = [
 [project.optional-dependencies]
 
 [project.urls]
-Repository = "https://github.com/atisharma/hy-repl"
+Repository = "https://github.com/atisharma/hy-fancy-repl"
 
 [tool.setuptools.dynamic]
 readme = {file = "README.md", content-type = "text/markdown"}
@@ -48,6 +48,7 @@ version = {attr = "hy_repl.__version__"}
 
 [project.scripts]
 hy-repl = "hy_repl:__cli_repl"
+hy-fancy-repl = "hy_repl:__cli_repl"
 
 # ... other project metadata fields as listed in:
 #     https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
