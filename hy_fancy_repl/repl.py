@@ -70,6 +70,7 @@ from beautifhy.highlight import hylight
 try:
     import matplotlib.pyplot as pyplot
     import matplotlib._pylab_helpers as mpl_helpers
+
     HAS_MPL = True
 except ModuleNotFoundError:
     HAS_MPL = False
@@ -85,17 +86,20 @@ history = FileHistory(history_file)
 
 # Read environment variable for theme
 style_name = os.environ.get("HY_PYGMENTS_STYLE", "lightbulb")
-bg = "dark" # default, usually fine
-if ':' in style_name:
-    style_name, bg = style_name.split(':', 1)
+bg = "dark"  # default, usually fine
+if ":" in style_name:
+    style_name, bg = style_name.split(":", 1)
 if style_name not in get_all_styles():
     style_name = "lightbulb"  # fallback
 
 # Convert pygments style to prompt_toolkit style
 pt_style = style_from_pygments_cls(get_style_by_name(style_name))
 
+
 class HyCompleter(Completer):
-    """Wrap prompt_toolkit's completion API around Hy's."""
+    """
+    Wrap prompt_toolkit's completion API around Hy's.
+    """
 
     def __init__(self, namespace=None):
         self.namespace = namespace or {}
@@ -118,35 +122,47 @@ class HyCompleter(Completer):
 
 # --- REPL traceback handling and highlighting --- #
 
-def _set_last_exc(exc_info = None):
-    """Setting `sys.last_exc`, or `sys.last_type` on earlier Pythons,
-    makes it easier for the user to call the debugger."""
+
+def _set_last_exc(exc_info=None):
+    """
+    Setting `sys.last_exc`, or `sys.last_type` on earlier Pythons,
+    makes it easier for the user to call the debugger.
+    """
     # this is from the standard Hy REPL
     t, v, tb = exc_info or sys.exc_info()
     sys.last_type, sys.last_value, sys.last_traceback = t, v, tb
     return t, v, tb
 
+
 def _get_lang_from_filename(filename):
-    """Guess the language from the filename extension."""
+    """
+    Guess the language from the filename extension.
+    """
     match os.path.basename(filename):
-        case 'py':
-            return 'python'
-        case 'hy':
-            return 'hylang'
-        case 'pytb':
-            return 'pytb'
-        case 'py3tb':
-            return 'py3tb'
+        case "py":
+            return "python"
+        case "hy":
+            return "hylang"
+        case "pytb":
+            return "pytb"
+        case "py3tb":
+            return "py3tb"
+
 
 def _read_file(filename):
     with open(filename, "r") as f:
         f.read()
 
-def _output_traceback(exc_type, exc_value, tb, *, bg=bg, limit=5, lines_around=2, linenos=True, ignore=[]):
-    """Syntax highlighted traceback."""
+
+def _output_traceback(
+    exc_type, exc_value, tb, *, bg=bg, limit=5, lines_around=2, linenos=True, ignore=[]
+):
+    """
+    Syntax highlighted traceback.
+    """
     _tb = tb
     lang = None
-    filename = ''
+    filename = ""
     while _tb:
         filename = _tb.tb_frame.f_code.co_filename
         ext = os.path.basename(filename)
@@ -154,30 +170,35 @@ def _output_traceback(exc_type, exc_value, tb, *, bg=bg, limit=5, lines_around=2
         if lang and (not any(map(filename.endswith, ignore))):
             source = _read_file(filename)
             lineno = _tb.tb_lineno
-            lines = source.split('\n')[lineno - lines_around:lineno + lines_around:None]
+            lines = source.split("\n")[
+                lineno - lines_around : lineno + lines_around : None
+            ]
             code_lexer = get_lexer_by_name(lang)
             code_formatter = TerminalFormatter(bg=bg, stripall=True, linenos=linenos)
             code_formatter._lineno = lineno - lines_around
-            sys.stderr.write(f'  File {Effect.BOLD}{filename}, line {_hy_let_lineno}\n')
-            sys.stderr.write(highlight('\n'.join(lines), code_lexer, code_formatter))
-            sys.stderr.write('\n')
+            sys.stderr.write(f"  File {Effect.BOLD}{filename}, line {_hy_let_lineno}\n")
+            sys.stderr.write(highlight("\n".join(lines), code_lexer, code_formatter))
+            sys.stderr.write("\n")
             break
         else:
             _tb = _tb.tb_next
     fexc = traceback.format_exception(exc_type, exc_value, tb, limit=limit)
     exc_formatter = TerminalFormatter(bg=bg, stripall=True)
     term = shutil.get_terminal_size()
-    return sys.stderr.write(highlight(''.join(fexc), PythonTracebackLexer(), exc_formatter))
+    return sys.stderr.write(
+        highlight("".join(fexc), PythonTracebackLexer(), exc_formatter)
+    )
 
 
 # --- Multiline input --- #
+
 
 def _indent_depths(text: str) -> str:
     """
     Calculate indentation for the next line, counting parens using HyLexer.
     """
     tokens = list(lex(text, HyLexer()))
-    depths = [0, 0, 0]   # parens, brackets, braces
+    depths = [0, 0, 0]  # parens, brackets, braces
     for ttype, val in tokens:
         # Ignore strings/comments
         if ttype in Token.Literal.String or ttype in Token.Comment:
@@ -191,13 +212,16 @@ def _indent_depths(text: str) -> str:
         depths[2] -= val.count("}")
     return depths
 
+
 # Key bindings: Enter accepts if complete, otherwise inserts newline.
 kb = KeyBindings()
 
+
 @kb.add("enter")
 def _(event):
-    """Enter accepts if ([{}])s balance,
-    otherwise inserts newline."""
+    """
+    Enter accepts if ([{}])s balance, otherwise inserts newline.
+    """
     buf = event.app.current_buffer
     text = buf.document.text
 
@@ -210,6 +234,7 @@ def _(event):
 
 
 # --- The custom REPL --- #
+
 
 class HyREPL(hy.repl.REPL):
     """
@@ -235,7 +260,7 @@ class HyREPL(hy.repl.REPL):
         super().__init__(locals, filename)
 
         # default ps2 should be of same length as ps1
-        self.ps2 = self.ps2[:len(self.ps1)]
+        self.ps2 = self.ps2[: len(self.ps1)]
 
         # Create the prompt session and store it in the instance
         self.session = PromptSession(
@@ -250,7 +275,7 @@ class HyREPL(hy.repl.REPL):
             message=ANSI(self.ps1),
             prompt_continuation=ANSI(self.ps2),
             multiline=True,
-            style=pt_style
+            style=pt_style,
         )
 
         # override repr, otherwise keep super's choice, set by HYSTARTUP
@@ -258,9 +283,11 @@ class HyREPL(hy.repl.REPL):
             self.output_fn = hylight
 
         if HAS_MPL:
-            pyplot.ion() # Enable interactive mode by default
+            pyplot.ion()  # Enable interactive mode by default
             self.pyplot = pyplot
-            self.locals['pyplot'] = pyplot # add pyplot instance to the REPL namespace too
+            self.locals["pyplot"] = (
+                pyplot  # add pyplot instance to the REPL namespace too
+            )
         else:
             self.pyplot = None
 
@@ -281,16 +308,16 @@ class HyREPL(hy.repl.REPL):
         # doesn't have the REPL frames.
         t, v, tb = _set_last_exc(exc_info_override and self.locals.get("_hy_exc_info"))
         if exc_info_override:
-            sys.last_type = self.locals.get('_hy_last_type', t)
-            sys.last_value = self.locals.get('_hy_last_value', v)
-            sys.last_traceback = self.locals.get('_hy_last_traceback', tb)
+            sys.last_type = self.locals.get("_hy_last_type", t)
+            sys.last_value = self.locals.get("_hy_last_value", v)
+            sys.last_traceback = self.locals.get("_hy_last_traceback", tb)
         _output_traceback(t, v, tb)
         self.locals[mangle("*e")] = v
 
     def _validation_text(self):
         """Return a red 'x' if parentheses don't balance."""
         if any(_indent_depths(self.session.app.current_buffer.text)):
-            return FormattedText([('class:red', 'x')])
+            return FormattedText([("class:red", "x")])
         else:
             return FormattedText()
 
@@ -340,7 +367,10 @@ class HyREPL(hy.repl.REPL):
             builtins.exit = hy.repl.HyQuitter("exit")
             builtins.help = hy.repl.HyHelper()
 
-            with hy.repl.filtered_hy_exceptions(), hy.repl.extend_linecache(self.cmdline_cache):
+            with (
+                hy.repl.filtered_hy_exceptions(),
+                hy.repl.extend_linecache(self.cmdline_cache),
+            ):
                 asyncio.run(self.interact(self.banner()))
 
         finally:
@@ -385,9 +415,9 @@ class HyREPL(hy.repl.REPL):
         finally:
 
             if exitmsg is None:
-                self.write('now exiting %s...\n' % self.__class__.__name__)
-            elif exitmsg != '':
-                self.write('%s\n' % exitmsg)
+                self.write("now exiting %s...\n" % self.__class__.__name__)
+            elif exitmsg != "":
+                self.write("%s\n" % exitmsg)
 
             if plot_task:
                 plot_task.cancel()
@@ -397,11 +427,13 @@ class HyREPL(hy.repl.REPL):
                     pass
 
     def banner(self):
-        return "🦑 Hy {version}{nickname} using {py}({build}) {pyversion} on {os}".format(
-            version=hy.__version__,
-            nickname="" if hy.nickname is None else f' ({hy.nickname})',
-            py=platform.python_implementation(),
-            build=platform.python_build()[0],
-            pyversion=platform.python_version(),
-            os=platform.system(),
+        return (
+            "🦑 Hy {version}{nickname} using {py}({build}) {pyversion} on {os}".format(
+                version=hy.__version__,
+                nickname="" if hy.nickname is None else f" ({hy.nickname})",
+                py=platform.python_implementation(),
+                build=platform.python_build()[0],
+                pyversion=platform.python_version(),
+                os=platform.system(),
+            )
         )

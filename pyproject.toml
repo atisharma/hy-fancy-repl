@@ -47,7 +47,6 @@ version = {attr = "hy_fancy_repl.__version__"}
 "*" = ["*.hy"]
 
 [project.scripts]
-hy-repl = "hy_fancy_repl:__cli_repl"
 hy-fancy-repl = "hy_fancy_repl:__cli_repl"
 
 # ... other project metadata fields as listed in:
