@@ -28,7 +28,7 @@ classifiers = [
     "Topic :: Utilities"
 ]
 dependencies = [
-    "hy>=1.1.0",
+    "hy>=1.2.0",
     "hyrule>=1.0.1",
     "beautifhy>=1.2.1",
     "prompt_toolkit>=3.0.52"

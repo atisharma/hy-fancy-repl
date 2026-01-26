@@ -2,7 +2,7 @@
 
 *A [Hy](https://hylang.org) enhanced REPL.*
 
-Probably compatible with Hy 1.1.0 and later.
+Probably compatible with Hy 1.2.0 and later.
 
 
 ### Install
