@@ -62,7 +62,8 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.lexers import PygmentsLexer
-from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
+from prompt_toolkit.layout.processors import Processor, Transformation, TransformationInput
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.patch_stdout import patch_stdout
 
@@ -240,6 +241,161 @@ def _indent_depths(text: str) -> list[int]:
     return depths
 
 
+# --- Bracket matching that respects Hy syntax (ignores strings/comments) --- #
+
+_BRACKETS = {"(": ")", "[": "]", "{": "}", ")": "(", "]": "[", "}": "{"}
+_CLOSING = ")]}"
+
+
+class HyMatchingBracketProcessor(Processor):
+    """
+    Highlight matching brackets, but ignore brackets inside strings and comments.
+    """
+
+    def __init__(self, max_distance: int = 1000) -> None:
+        self.max_distance = max_distance
+
+    def _find_matching_bracket(self, text: str, pos: int) -> int | None:
+        """Find the matching bracket position, respecting Hy syntax."""
+        char = text[pos]
+        if char not in _BRACKETS:
+            return None
+
+        target = _BRACKETS[char]
+        is_closing = char in _CLOSING
+
+        # Tokenize and track positions
+        tokens = list(lex(text, HyLexer()))
+
+        # Build list of (position, char, is_in_string_or_comment)
+        bracket_positions = []
+        current_pos = 0
+        for ttype, val in tokens:
+            val_len = len(val)
+            is_special = ttype in Token.Literal.String or ttype in Token.Comment
+            for i, c in enumerate(val):
+                if c in _BRACKETS:
+                    bracket_positions.append((current_pos + i, c, is_special))
+            current_pos += val_len
+
+        # Find our position in the list
+        try:
+            idx = next(i for i, (p, c, _) in enumerate(bracket_positions) if p == pos and c == char)
+        except StopIteration:
+            return None
+
+        # Count brackets to find match
+        depth = 1
+        step = -1 if is_closing else 1
+        i = idx + step
+
+        while 0 <= i < len(bracket_positions) and abs(bracket_positions[i][0] - pos) <= self.max_distance:
+            _, c, is_special = bracket_positions[i]
+            if is_special:
+                i += step
+                continue
+            if c == char:
+                depth += 1
+            elif c == target:
+                depth -= 1
+                if depth == 0:
+                    return bracket_positions[i][0]
+            i += step
+
+        return None
+
+    def apply_transformation(self, transformation_input: TransformationInput) -> Transformation:
+        from prompt_toolkit.layout.processors import Transformation
+
+        buffer_control, document, lineno, source_to_display, fragments, _, _ = transformation_input.unpack()
+
+        # Don't highlight when application is done
+        if get_app().is_done:
+            return Transformation(fragments)
+
+        # Check if cursor is on a bracket in this line
+        cursor_row = document.cursor_position_row
+        if lineno != cursor_row:
+            return Transformation(fragments)
+
+        # Get cursor column in display coordinates
+        cursor_col = source_to_display(document.cursor_position_col)
+
+        # Check character under cursor
+        current_char_pos = document.cursor_position
+        if current_char_pos >= len(document.text):
+            # Check character before cursor (for closing brackets)
+            if current_char_pos > 0 and document.text[current_char_pos - 1] in _CLOSING:
+                current_char_pos -= 1
+            else:
+                return Transformation(fragments)
+
+        char = document.text[current_char_pos]
+        if char not in _BRACKETS:
+            return Transformation(fragments)
+
+        # Find matching bracket
+        match_pos = self._find_matching_bracket(document.text, current_char_pos)
+        if match_pos is None:
+            return Transformation(fragments)
+
+        # Convert match position to row/col
+        match_row, match_col = document.translate_index_to_position(match_pos)
+
+        # Highlight if match is on this line
+        if match_row == lineno:
+            match_display_col = source_to_display(match_col)
+            # Apply highlight style to matching bracket
+            new_fragments = []
+            col = 0
+            for style, text, *rest in fragments:
+                text_len = len(text)
+                # Check if this fragment contains the bracket to highlight
+                if col <= match_display_col < col + text_len:
+                    # Split fragment and add highlight
+                    before = text[:match_display_col - col]
+                    bracket = text[match_display_col - col:match_display_col - col + 1]
+                    after = text[match_display_col - col + 1:]
+                    if before:
+                        new_fragments.append((style, before, *rest))
+                    new_fragments.append((style + " class:matching-bracket", bracket, *rest))
+                    if after:
+                        new_fragments.append((style, after, *rest))
+                elif col <= cursor_col < col + text_len:
+                    # Highlight cursor bracket too
+                    before = text[:cursor_col - col]
+                    bracket = text[cursor_col:cursor_col + 1]
+                    after = text[cursor_col + 1:]
+                    if before:
+                        new_fragments.append((style, before, *rest))
+                    new_fragments.append((style + " class:matching-bracket", bracket, *rest))
+                    if after:
+                        new_fragments.append((style, after, *rest))
+                else:
+                    new_fragments.append((style, text, *rest))
+                col += text_len
+            return Transformation(new_fragments)
+
+        # Match is on another line, just highlight cursor bracket
+        new_fragments = []
+        col = 0
+        for style, text, *rest in fragments:
+            text_len = len(text)
+            if col <= cursor_col < col + text_len:
+                before = text[:cursor_col - col]
+                bracket = text[cursor_col:cursor_col + 1]
+                after = text[cursor_col - col + 1:]
+                if before:
+                    new_fragments.append((style, before, *rest))
+                new_fragments.append((style + " class:matching-bracket", bracket, *rest))
+                if after:
+                    new_fragments.append((style, after, *rest))
+            else:
+                new_fragments.append((style, text, *rest))
+            col += text_len
+        return Transformation(new_fragments)
+
+
 # Key bindings: Enter accepts if complete, otherwise inserts newline.
 kb = KeyBindings()
 
@@ -307,7 +463,7 @@ class HyREPL(hy.repl.REPL):
             prompt_continuation=ANSI(self.ps2),
             multiline=True,
             style=pt_style,
-            input_processors=[HighlightMatchingBracketProcessor()],
+            input_processors=[HyMatchingBracketProcessor()],
         )
 
         # override repr, otherwise keep super's choice, set by HYSTARTUP
