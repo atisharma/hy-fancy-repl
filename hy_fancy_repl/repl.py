@@ -91,6 +91,29 @@ history_file = os.environ.get("HY_HISTORY", os.path.expanduser("~/.hy-history"))
 history = FileHistory(history_file)
 
 
+# --- Traceback filtering --- #
+
+# Default files to ignore in tracebacks (infrastructure/implementation)
+# Override with HY_TRACEBACK_IGNORE env var (comma-separated)
+_default_traceback_ignore = (
+    "hy_fancy_repl/repl.py",
+    "hy/repl.py",
+    "hy/importer.py",
+    "hy/compiler.py",
+    "hy/macros.py",
+    "code.py",
+    "funcparserlib/parser.py",
+    "multimethod/__init__.py",
+)
+
+# Allow override via environment variable
+_traceback_ignore_env = os.environ.get("HY_TRACEBACK_IGNORE")
+if _traceback_ignore_env:
+    TRACEBACK_IGNORE = tuple(_traceback_ignore_env.split(","))
+else:
+    TRACEBACK_IGNORE = _default_traceback_ignore
+
+
 # --- REPL syntax highlighting and completion --- #
 
 # Read environment variable for theme
@@ -499,8 +522,8 @@ class HyREPL(hy.repl.REPL):
             sys.last_type = self.locals.get("_hy_last_type", t)
             sys.last_value = self.locals.get("_hy_last_value", v)
             sys.last_traceback = self.locals.get("_hy_last_traceback", tb)
-        # Ignore REPL internals to show user's code
-        _output_traceback(t, v, tb, ignore=("hy_fancy_repl/repl.py", "hy/repl.py", "code.py"))
+        # Ignore infrastructure files to show user's code
+        _output_traceback(t, v, tb, ignore=TRACEBACK_IGNORE)
         self.locals[mangle("*e")] = v
 
     def _validation_text(self) -> FormattedText:
