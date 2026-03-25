@@ -62,9 +62,17 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.lexers import PygmentsLexer
-from prompt_toolkit.layout.processors import Processor, Transformation, TransformationInput
+from prompt_toolkit.layout.processors import (
+    Processor,
+    Transformation,
+    TransformationInput,
+)
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.styles import style_from_pygments_cls, Style as PTStyle, merge_styles
+from prompt_toolkit.styles import (
+    style_from_pygments_cls,
+    Style as PTStyle,
+    merge_styles,
+)
 from prompt_toolkit.patch_stdout import patch_stdout
 
 from pygments import highlight, lex
@@ -126,12 +134,16 @@ if style_name not in get_all_styles():
 
 # Convert pygments style to prompt_toolkit style and add matching-bracket style
 pygments_style = style_from_pygments_cls(get_style_by_name(style_name))
-pt_style = merge_styles([
-    pygments_style,
-    PTStyle.from_dict({
-        'matching-bracket': 'bg:#888888 #ffffff bold',
-    })
-])
+pt_style = merge_styles(
+    [
+        pygments_style,
+        PTStyle.from_dict(
+            {
+                "matching-bracket": "bg:#888888 #ffffff bold",
+            }
+        ),
+    ]
+)
 
 
 class HyCompleter(Completer):
@@ -233,7 +245,9 @@ def _output_traceback(
             code_lexer = get_lexer_by_name(lang)
             code_formatter = TerminalFormatter(bg=bg, stripall=True, linenos=linenos)
             code_formatter._lineno = lineno - lines_around
-            sys.stderr.write(f"  File {Effect.BOLD}{filename}{Effect.OFF}, line {lineno}\n")
+            sys.stderr.write(
+                f"  File {Effect.BOLD}{filename}{Effect.OFF}, line {lineno}\n"
+            )
             sys.stderr.write(highlight("\n".join(lines), code_lexer, code_formatter))
             sys.stderr.write("\n")
             break
@@ -301,7 +315,9 @@ def _find_matching_bracket(text: str, pos: int, max_distance: int = 1000) -> int
 
     # Find our position in the list
     try:
-        idx = next(i for i, (p, c, _) in enumerate(bracket_positions) if p == pos and c == char)
+        idx = next(
+            i for i, (p, c, _) in enumerate(bracket_positions) if p == pos and c == char
+        )
     except StopIteration:
         return None
 
@@ -310,7 +326,10 @@ def _find_matching_bracket(text: str, pos: int, max_distance: int = 1000) -> int
     step = -1 if is_closing else 1
     i = idx + step
 
-    while 0 <= i < len(bracket_positions) and abs(bracket_positions[i][0] - pos) <= max_distance:
+    while (
+        0 <= i < len(bracket_positions)
+        and abs(bracket_positions[i][0] - pos) <= max_distance
+    ):
         _, c, is_special = bracket_positions[i]
         if is_special:
             i += step
@@ -334,8 +353,12 @@ class HyMatchingBracketProcessor(Processor):
     def __init__(self, max_distance: int = 1000) -> None:
         self.max_distance = max_distance
 
-    def apply_transformation(self, transformation_input: TransformationInput) -> Transformation:
-        buffer_control, document, lineno, source_to_display, fragments, _, _ = transformation_input.unpack()
+    def apply_transformation(
+        self, transformation_input: TransformationInput
+    ) -> Transformation:
+        buffer_control, document, lineno, source_to_display, fragments, _, _ = (
+            transformation_input.unpack()
+        )
 
         # Don't highlight when application is done
         if get_app().is_done:
@@ -343,14 +366,14 @@ class HyMatchingBracketProcessor(Processor):
 
         # Check if cursor is on a bracket
         cursor_pos = document.cursor_position
-        
+
         # Check character under cursor, or before cursor if at end
         if cursor_pos >= len(document.text):
             if cursor_pos > 0 and document.text[cursor_pos - 1] in _CLOSING:
                 cursor_pos -= 1
             else:
                 return Transformation(fragments)
-        
+
         char = document.text[cursor_pos]
         if char not in _BRACKETS:
             return Transformation(fragments)
@@ -362,58 +385,70 @@ class HyMatchingBracketProcessor(Processor):
 
         # Get positions for this line
         line_start = document.translate_row_col_to_index(lineno, 0)
-        line_end = document.translate_row_col_to_index(lineno, len(document.lines[lineno]))
-        
+        line_end = document.translate_row_col_to_index(
+            lineno, len(document.lines[lineno])
+        )
+
         # Determine which positions to highlight on this line
         positions_to_highlight = set()
-        
+
         # Cursor position
         if line_start <= cursor_pos < line_end:
             positions_to_highlight.add(cursor_pos - line_start)
-        
+
         # Match position (if on same line)
         if line_start <= match_pos < line_end:
             positions_to_highlight.add(match_pos - line_start)
-        
+
         if not positions_to_highlight:
             return Transformation(fragments)
 
         # Build new fragments with highlights
         new_fragments = []
         source_col = 0
-        
+
         for style, text_val, *rest in fragments:
             display_col = source_to_display(source_col)
             text_len = len(text_val)
-            
+
             # Check if any position to highlight falls within this fragment
-            highlight_in_fragment = [p for p in positions_to_highlight 
-                                     if display_col <= p < display_col + text_len]
-            
+            highlight_in_fragment = [
+                p
+                for p in positions_to_highlight
+                if display_col <= p < display_col + text_len
+            ]
+
             if not highlight_in_fragment:
                 new_fragments.append((style, text_val, *rest))
             else:
                 # Split fragment at highlight positions
                 current_pos = display_col
                 last_split = 0
-                
+
                 for highlight_pos in sorted(highlight_in_fragment):
                     # Text before highlight
                     before_end = highlight_pos - display_col
                     if before_end > last_split:
-                        new_fragments.append((style, text_val[last_split:before_end], *rest))
-                    
+                        new_fragments.append(
+                            (style, text_val[last_split:before_end], *rest)
+                        )
+
                     # The highlighted character
-                    new_fragments.append((style + " class:matching-bracket", 
-                                         text_val[before_end:before_end + 1], *rest))
-                    
+                    new_fragments.append(
+                        (
+                            style + " class:matching-bracket",
+                            text_val[before_end : before_end + 1],
+                            *rest,
+                        )
+                    )
+
                     last_split = before_end + 1
                     current_pos = highlight_pos + 1
-                
+
                 # Remaining text after last highlight
                 if last_split < text_len:
                     new_fragments.append((style, text_val[last_split:], *rest))
-            
+
             source_col += text_len
 
         return Transformation(new_fragments)
@@ -511,7 +546,9 @@ class HyREPL(hy.repl.REPL):
             # Raise clean exit to base class's interact() loop
             raise SystemExit
 
-    def _error_wrap(self, exc_info_override: bool = False, *args: Any, **kwargs: Any) -> None:
+    def _error_wrap(
+        self, exc_info_override: bool = False, *args: Any, **kwargs: Any
+    ) -> None:
         """
         Wrap Hy errors with source resolution and syntax highlighting.
         """
@@ -591,7 +628,9 @@ class HyREPL(hy.repl.REPL):
 
         return 0
 
-    async def interact(self, banner: Optional[str] = None, exitmsg: Optional[str] = None) -> None:
+    async def interact(
+        self, banner: Optional[str] = None, exitmsg: Optional[str] = None
+    ) -> None:
         """
         An async version of `InteractiveConsole.interact`.
         """

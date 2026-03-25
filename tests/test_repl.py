@@ -101,22 +101,24 @@ class TestReadFile:
 
     def test_reads_file_content(self):
         """Should return file contents as string."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.hy', delete=False) as f:
-            f.write("(print \"hello\")\n")
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".hy", delete=False) as f:
+            f.write('(print "hello")\n')
             temp_path = f.name
-        
+
         try:
             content = _read_file(temp_path)
-            assert content == "(print \"hello\")\n"
+            assert content == '(print "hello")\n'
         finally:
             os.unlink(temp_path)
 
     def test_reads_unicode(self):
         """Should handle unicode content."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.hy', delete=False, encoding='utf-8') as f:
-            f.write("(print \"héllo wörld 🦑\")\n")
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".hy", delete=False, encoding="utf-8"
+        ) as f:
+            f.write('(print "héllo wörld 🦑")\n')
             temp_path = f.name
-        
+
         try:
             content = _read_file(temp_path)
             assert "héllo wörld 🦑" in content
@@ -139,7 +141,7 @@ class TestSetLastExc:
         except:
             exc_info = sys.exc_info()
             t, v, tb = _set_last_exc(exc_info)
-            
+
             assert sys.last_type is t
             assert sys.last_value is v
             assert sys.last_traceback is tb
@@ -174,13 +176,13 @@ class TestHyCompleter:
     def test_get_completions_yields_completions(self):
         """Should yield Completion objects."""
         completer = HyCompleter({"foobar": 1, "foobaz": 2})
-        
+
         # Create a mock document
         doc = Mock()
         doc.get_word_before_cursor.return_value = "foo"
-        
+
         completions = list(completer.get_completions(doc, Mock()))
-        
+
         # Should have completions for foobar and foobaz
         assert len(completions) == 2
         assert all(c.text in ["foobar", "foobaz"] for c in completions)
@@ -188,16 +190,16 @@ class TestHyCompleter:
     def test_completions_update_namespace(self):
         """Should update namespace reference on each call."""
         completer = HyCompleter({"old": 1})
-        
+
         doc = Mock()
         doc.get_word_before_cursor.return_value = ""
-        
+
         # Update namespace
         completer.namespace = {"new": 2}
-        
+
         # Trigger get_completions to update internal completer's namespace
         list(completer.get_completions(doc, Mock()))
-        
+
         # The completer's internal completer should see the new namespace
         assert completer.c.namespace["new"] == 2
 
@@ -230,7 +232,7 @@ class TestHyREPL:
         """Should return FormattedText."""
         repl = HyREPL()
         result = repl._validation_text()
-        assert isinstance(result, tuple) or hasattr(result, '__iter__')
+        assert isinstance(result, tuple) or hasattr(result, "__iter__")
 
     def test_ps2_truncated_to_ps1_length(self):
         """ps2 should be truncated to match ps1 length."""
