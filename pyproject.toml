@@ -30,7 +30,7 @@ classifiers = [
 dependencies = [
     "hy>=1.2.0",
     "hyrule>=1.0.1",
-    "beautifhy>=1.2.1",
+    "beautifhy>=1.2.4",
     "colorist>=1.8",
     "prompt_toolkit>=3.0.52"
 ]

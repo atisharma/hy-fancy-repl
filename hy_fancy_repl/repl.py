@@ -64,7 +64,7 @@ from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.layout.processors import Processor, Transformation, TransformationInput
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.styles import style_from_pygments_cls
+from prompt_toolkit.styles import style_from_pygments_cls, Style as PTStyle, merge_styles
 from prompt_toolkit.patch_stdout import patch_stdout
 
 from pygments import highlight, lex
@@ -101,8 +101,14 @@ if ":" in style_name:
 if style_name not in get_all_styles():
     style_name = "lightbulb"  # fallback
 
-# Convert pygments style to prompt_toolkit style
-pt_style = style_from_pygments_cls(get_style_by_name(style_name))
+# Convert pygments style to prompt_toolkit style and add matching-bracket style
+pygments_style = style_from_pygments_cls(get_style_by_name(style_name))
+pt_style = merge_styles([
+    pygments_style,
+    PTStyle.from_dict({
+        'matching-bracket': 'bg:#888888 #ffffff bold',
+    })
+])
 
 
 class HyCompleter(Completer):
