@@ -62,6 +62,7 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.lexers import PygmentsLexer
+from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.patch_stdout import patch_stdout
 
@@ -306,6 +307,7 @@ class HyREPL(hy.repl.REPL):
             prompt_continuation=ANSI(self.ps2),
             multiline=True,
             style=pt_style,
+            input_processors=[HighlightMatchingBracketProcessor()],
         )
 
         # override repr, otherwise keep super's choice, set by HYSTARTUP
