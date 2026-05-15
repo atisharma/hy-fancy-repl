@@ -42,11 +42,11 @@ class TestIndentDepths:
 
     def test_braces(self):
         """Curly braces should be counted separately."""
-        assert _indent_depths("{:key value") == [0, 0, 1]
+        assert _indent_depths("{\"key\" value") == [0, 0, 1]
 
     def test_mixed_delimiters(self):
         """Mixed delimiters should all be counted."""
-        assert _indent_depths("(foo [bar {:key") == [1, 1, 1]
+        assert _indent_depths("(foo [bar {\"key\"") == [1, 1, 1]
 
     def test_closing_reduces_count(self):
         """Closing delimiters should reduce the count."""
