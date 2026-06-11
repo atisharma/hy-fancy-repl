@@ -11,7 +11,7 @@ This file is for AI agents and LLM-assisted workflows contributing to beautifhy.
 
 ## What to Include
 
-- **PR description:** Note AI assistance ("Generated with Claude" or similar).
+- **PR description:** Note AI assistance ("Generated with <agent>" or similar).
 - **Commit attribution:** `Co-authored-by: Agent <agent@agent-framework.local>` if you did the bulk of the work.
 
 ## Do Not
