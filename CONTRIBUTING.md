@@ -4,7 +4,7 @@ This document covers the process for both human and AI-assisted contributions.
 
 ## Getting Started
 
-1. Fork the repository (if external) or create a feature branch.
+1. Fork the repository or create a feature branch.
 2. Install in development mode: `pip install -e .`
 3. Run tests to ensure baseline: `python3 -m pytest tests/ --assert=plain`
 
@@ -27,7 +27,7 @@ This document covers the process for both human and AI-assisted contributions.
 We accept contributions generated with LLM assistance, subject to these requirements:
 
 - **Human review required.** All AI-generated PRs must be reviewed and approved by a human maintainer.
-- **Declare non-trivial assistance.** Note in the PR description: "Generated with assistance from [Claude/ChatGPT/etc]."
+- **Declare non-trivial assistance.** Note in the PR description: "Generated with assistance from <assistant>."
 - **No autonomous merges.** AI agents must not merge, approve, or create releases.
 - **Quality bar is the same.** AI-generated code must be idiomatic, pass all tests, and pass lint checks.
 
